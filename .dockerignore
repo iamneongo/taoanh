@@ -2,11 +2,6 @@ node_modules
 .next
 .git
 .github
-backend
 .claude
-*.md
-!README.md
 .env*
 .vercel
-Dockerfile
-.dockerignore
