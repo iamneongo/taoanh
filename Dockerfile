@@ -6,9 +6,14 @@ RUN bun install --frozen-lockfile
 
 FROM oven/bun:1 AS build
 WORKDIR /app
+# NEXT_PUBLIC_* are inlined at build time → must be present during `bun run build`
+ARG NEXT_PUBLIC_BACKEND_URL
+ARG NEXT_PUBLIC_BACKEND_AUTH_KEY
+ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL \
+    NEXT_PUBLIC_BACKEND_AUTH_KEY=$NEXT_PUBLIC_BACKEND_AUTH_KEY \
+    NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build
 
 FROM oven/bun:1 AS run
