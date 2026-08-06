@@ -3,6 +3,8 @@ import { eq, asc } from "drizzle-orm";
 import { getDefaultOrg } from "@/lib/default-org";
 import { CatalogClient } from "./catalog-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function CatalogPage() {
   const org = await getDefaultOrg();
 

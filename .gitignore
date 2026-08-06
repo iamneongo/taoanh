@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# backend (python) runtime — keep code, exclude secrets & generated data
+backend/data/
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.py[oc]
+backend/git_cache/
+backend/logs.jsonl

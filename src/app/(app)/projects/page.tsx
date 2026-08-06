@@ -21,6 +21,8 @@ const statusVariant: Record<string, "secondary" | "warning" | "success"> = {
   completed: "success",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectsPage() {
   const org = await getDefaultOrg();
 

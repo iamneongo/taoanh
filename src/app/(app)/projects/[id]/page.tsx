@@ -3,6 +3,8 @@ import { db, projects, projectImages } from "@/lib/db";
 import { eq, and, desc } from "drizzle-orm";
 import { ProjectWorkflow } from "./project-workflow";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 

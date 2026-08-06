@@ -3,6 +3,8 @@ import { eq, desc } from "drizzle-orm";
 import { getDefaultOrg } from "@/lib/default-org";
 import { DashboardView } from "./dashboard-view";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const org = await getDefaultOrg();
   const projectList = await db.select().from(projects)
