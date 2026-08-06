@@ -88,6 +88,7 @@ export const ATMOSPHERES: Chip[] = [
 ];
 
 export const ROOM_TYPES: Chip[] = [
+  { id: "auto",     label: "Tự nhận diện", emoji: "", prompt: "the room shown in the reference photo — automatically detect and preserve its existing function and type" },
   { id: "living",   label: "Phòng khách", emoji: "🛋️", prompt: "living room and lounge area" },
   { id: "bedroom",  label: "Phòng ngủ",  emoji: "🛏️", prompt: "master bedroom" },
   { id: "kitchen",  label: "Bếp",        emoji: "🍳", prompt: "kitchen and dining area" },
@@ -105,6 +106,30 @@ export const MATERIALS: Chip[] = [
   { id: "concrete", label: "Bê tông",      emoji: "🧱", prompt: "polished micro-cement and raw concrete surfaces" },
 ];
 
+// Materials that fit each interior style — keeps the material picker relevant so
+// clients don't pick a material that clashes with the chosen style.
+const STYLE_MATERIALS: Record<string, string[]> = {
+  "modern-luxury": ["marble", "metal", "velvet", "wood"],
+  "japandi":       ["wood", "rattan", "concrete"],
+  "nordic":        ["wood", "rattan", "concrete"],
+  "indochine":     ["wood", "rattan", "marble"],
+  "neo-classic":   ["marble", "velvet", "wood", "metal"],
+  "minimalist":    ["concrete", "wood", "marble"],
+  "mid-century":   ["wood", "metal", "velvet"],
+  "tropical-chic": ["rattan", "wood", "concrete"],
+  "industrial":    ["concrete", "metal", "wood"],
+  "korean":        ["wood", "marble", "velvet"],
+  "cinematic":     ["velvet", "marble", "metal"],
+  "commercial":    ["metal", "concrete", "wood"],
+};
+
+/** Materials relevant to a style. Falls back to all materials when unknown. */
+export function materialsForStyle(styleId?: string | null): Chip[] {
+  const ids = styleId ? STYLE_MATERIALS[styleId] : undefined;
+  if (!ids) return MATERIALS;
+  return MATERIALS.filter(m => ids.includes(m.id));
+}
+
 // ── Prompt builder ────────────────────────────────────────────────────────────
 // Uses Template I (Visual Descriptor) and Template J (Reference Image Editing)
 // from prompt-master for gpt-image-2 (DALL-E 3 compatible prose model)
@@ -117,6 +142,7 @@ export function buildPrompt(opts: {
   materials?: Chip[];
   catalogItems?: { name: string; description: string | null }[];
   customNote?: string;
+  furniture?: string[];
   hasReferenceImage?: boolean;
 }): string {
   const room  = opts.roomType?.prompt ?? "interior room";
@@ -141,22 +167,40 @@ export function buildPrompt(opts: {
 
   const customPart = opts.customNote?.trim() || null;
 
+  const furniturePart = opts.furniture?.length
+    ? `furnish the room with these pieces: ${opts.furniture.join("; ")}`
+    : null;
+  const allowFurniture = !!furniturePart;
+
   if (opts.hasReferenceImage) {
-    // Template J — Reference Image Editing
-    // Focus on the DELTA only: what changes, what stays exactly the same
-    const changes: string[] = [`Apply ${style} to every surface, material, and furnishing`];
-    if (materialsPart) changes.push(`Replace materials with: ${materialsPart}`);
-    if (lightingParts.length) changes.push(`Restyle the lighting using: ${lighting}`);
-    if (catalogPart) changes.push(catalogPart);
-    if (customPart) changes.push(customPart);
+    // Template J — Reference Image Editing.
+    // This is a RE-SKIN, not a redesign. The geometry/camera LOCK is placed
+    // first and strongest so it survives attention decay; only surface finishes
+    // change. Prevents the model from moving walls, reframing, or rescaling.
+    const keep = [
+      "the exact camera angle, viewpoint, focal length, zoom and framing of the reference photo",
+      "the room architecture: wall positions, ceiling height, plus every window and door in its original location, size and shape",
+      "the floor plan, overall perspective, spatial proportions and the real-world scale of the room",
+      "the placement and footprint of existing furniture — each piece stays in the same position, orientation and relative size",
+    ];
+
+    const changes = [
+      `restyle the surfaces, finishes and décor to ${style}`,
+      materialsPart ? `apply these materials to floors, walls and surfaces: ${materialsPart}` : null,
+      lightingParts.length ? `relight the scene using ${lighting}` : null,
+      furniturePart,
+      catalogPart,
+      customPart,
+    ].filter(Boolean) as string[];
 
     return [
-      `Redesign this ${room} interior completely while preserving the exact room architecture: same floor plan, ceiling height, window positions, door openings, and room proportions. Do not alter the structural shell.`,
-      `What to change: ${changes.join(". ")}.`,
-      `Style target: ${style}.`,
-      `Lighting: ${lighting}.`,
-      `Output quality: ultra-photorealistic, 4K UHD resolution, professional architectural interior photography, sharp focus across entire frame, perfect perspective with no lens distortion, every material texture rendered in crisp microscopic detail, magazine-quality HDR lighting with balanced highlights and shadows.`,
-      `Do not include any people, text, watermarks, or unrealistic proportions. No blurriness, no noise, no overexposure.`,
+      `Edit this reference photo of a ${room}. This is a RE-STYLING task, NOT a redesign — keep the room geometry and camera identical to the reference and change only the visual style of the surfaces and furnishings.`,
+      `MUST keep pixel-accurate to the reference: ${keep.join("; ")}. The result must overlay the original one-to-one.`,
+      `Only change: ${changes.join("; ")}. ${allowFurniture
+        ? "You may place the requested furniture naturally to fit the room, but keep all architecture — walls, windows, doors, ceiling and floor plan — completely unchanged."
+        : "Swap furnishings for same-sized pieces in the same positions — never move, add, remove, rotate or resize any furniture or architectural element."}`,
+      `Quality: ultra-photorealistic 4K UHD architectural interior photography, tack-sharp focus across the whole frame, true-to-reference perspective with no lens distortion, realistic materials and HDR lighting.`,
+      `Do NOT change the room layout, wall / window / door positions or sizes, ceiling height, camera angle, zoom or aspect ratio. Do NOT add or remove any window, door or wall.${allowFurniture ? "" : " Do NOT add or remove any furniture."} No people, no text, no watermarks, no warped or unrealistic proportions.`,
     ].join(" ");
   } else {
     // Template I — Visual Descriptor (pure generation)
@@ -166,6 +210,7 @@ export function buildPrompt(opts: {
     parts.push(`Style: ${style}.`);
     if (materialsPart) parts.push(`Materials and surfaces: ${materialsPart}.`);
     parts.push(`Lighting: ${lighting}.`);
+    if (furniturePart) parts.push(`Furniture: ${furniturePart}.`);
     if (catalogPart) parts.push(catalogPart);
     if (customPart) parts.push(customPart);
     parts.push(`Composition: wide-angle architectural interior shot, perfect symmetrical perspective, slight elevated viewpoint showing full room depth and spatial volume.`);

@@ -18,7 +18,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const [project] = await db.select().from(projects).where(eq(projects.id, id));
   if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const body = await req.json() as { url?: string; b64Json?: string; prompt?: string; style?: string; type?: string };
+  const body = await req.json() as {
+    url?: string; b64Json?: string; prompt?: string; style?: string; type?: string;
+    metadata?: Record<string, unknown>;
+  };
 
   const [image] = await db
     .insert(projectImages)
@@ -29,6 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       b64Json: body.b64Json ?? null,
       prompt: body.prompt ?? null,
       style: body.style ?? null,
+      metadata: body.metadata ?? null,
       taskStatus: "success",
     })
     .returning();

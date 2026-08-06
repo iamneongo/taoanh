@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ArrowRight, User, FileText } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { FadeIn } from "@/components/ui/motion-primitives";
+import { User, FileText } from "lucide-react";
+import { ArrowLeft } from "@/components/animate-ui/icons/arrow-left";
+import { ArrowRight } from "@/components/animate-ui/icons/arrow-right";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { toast } from "sonner";
 
 export default function NewProjectPage() {
@@ -43,28 +48,32 @@ export default function NewProjectPage() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-    <div className="max-w-2xl mx-auto px-8 py-10">
-      <button
-        onClick={() => router.back()}
-        className="flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 mb-8 transition-colors"
-      >
-        <ArrowLeft className="size-4" />
-        Quay lại
-      </button>
+    <div className="max-w-2xl mx-auto px-4 md:px-8 py-6 md:py-10">
+      <AnimateIcon animateOnHover asChild>
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 mb-8 transition-colors"
+        >
+          <ArrowLeft className="size-4" />
+          Quay lại
+        </button>
+      </AnimateIcon>
 
-      <h1 className="text-xl font-bold text-stone-900 mb-1">Dự án mới</h1>
-      <p className="text-sm text-stone-400 mb-8">Nhập thông tin khách hàng để bắt đầu</p>
+      <FadeIn>
+        <h1 className="text-xl font-bold text-stone-900 mb-1">Dự án mới</h1>
+        <p className="text-sm text-stone-400 mb-8">Nhập thông tin khách hàng để bắt đầu</p>
+      </FadeIn>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Client info */}
-        <div className="rounded-xl border border-stone-100 bg-stone-50/40 p-6 space-y-4">
+        <Card className="gap-0 bg-stone-50/40 p-6 space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <User className="size-4 text-stone-500" />
             <span className="text-sm font-medium text-stone-700">Thông tin khách hàng</span>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-stone-500 uppercase tracking-wide">
+            <label className="text-xs font-medium text-stone-500 ">
               Tên khách hàng <span className="text-red-400">*</span>
             </label>
             <Input
@@ -76,7 +85,7 @@ export default function NewProjectPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-stone-500 uppercase tracking-wide">Email</label>
+            <label className="text-xs font-medium text-stone-500 ">Email</label>
             <Input
               type="email"
               value={form.clientEmail}
@@ -84,17 +93,17 @@ export default function NewProjectPage() {
               placeholder="khachhang@email.com"
             />
           </div>
-        </div>
+        </Card>
 
         {/* Room description */}
-        <div className="rounded-xl border border-stone-100 bg-stone-50/40 p-6 space-y-4">
+        <Card className="gap-0 bg-stone-50/40 p-6 space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <FileText className="size-4 text-stone-500" />
             <span className="text-sm font-medium text-stone-700">Mô tả không gian</span>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-stone-500 uppercase tracking-wide">
+            <label className="text-xs font-medium text-stone-500 ">
               Ghi chú ban đầu
             </label>
             <Textarea
@@ -104,12 +113,14 @@ export default function NewProjectPage() {
               rows={4}
             />
           </div>
-        </div>
+        </Card>
 
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Đang tạo..." : "Tạo dự án và bắt đầu"}
-          {!loading && <ArrowRight className="size-4" />}
-        </Button>
+        <AnimateIcon animateOnHover asChild>
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? "Đang tạo..." : "Tạo dự án và bắt đầu"}
+            {!loading && <ArrowRight className="size-4" />}
+          </Button>
+        </AnimateIcon>
       </form>
     </div>
     </div>

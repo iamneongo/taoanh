@@ -5,9 +5,17 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
-  Plus, Pencil, Trash2, Loader2, X, FolderOpen,
-  Package, ImageIcon, ChevronRight,
-} from "lucide-react";
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Highlight, HighlightItem,
+} from "@/components/animate-ui/primitives/effects/highlight";
+import { StaggerGroup, StaggerItem } from "@/components/ui/motion-primitives";
+import { Pencil, Loader2, FolderOpen, Package, ImageIcon } from "lucide-react";
+import { Plus } from "@/components/animate-ui/icons/plus";
+import { Trash2 } from "@/components/animate-ui/icons/trash-2";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 
 type Category = { id: string; name: string; description: string | null };
 type Item = {
@@ -89,55 +97,66 @@ export function CatalogClient({
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex flex-col md:flex-row h-full min-h-0">
       {/* ── Sidebar: categories ──────────────────────────────────────────── */}
-      <aside className="w-56 flex-shrink-0 border-r border-stone-100 flex flex-col bg-stone-50/40">
+      <aside className="w-full md:w-56 flex-shrink-0 border-b md:border-b-0 md:border-r border-stone-100 flex flex-col bg-stone-50/40 max-h-[32vh] md:max-h-none">
         <div className="flex items-center justify-between px-4 py-4 border-b border-stone-100">
-          <span className="text-xs font-semibold uppercase tracking-widest text-stone-500">Danh mục</span>
+          <span className="text-xs font-semibold text-stone-500">Danh mục</span>
           <button
             onClick={() => setCatDialog({ mode: "add" })}
             className="size-6 rounded-md flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
           >
-            <Plus className="size-3.5" />
+            <Plus className="size-3.5" animateOnHover />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
-          {categories.length === 0 && (
+        {categories.length === 0 ? (
+          <nav className="flex-1 overflow-y-auto px-2 py-2">
             <p className="px-3 py-4 text-xs text-stone-400 text-center">Chưa có danh mục</p>
-          )}
-          {categories.map(cat => (
-            <div
-              key={cat.id}
-              className={cn(
-                "group flex items-center gap-2 rounded-md px-3 py-2 cursor-pointer transition-colors",
-                activeCatId === cat.id
-                  ? "bg-stone-200/70 text-stone-900"
-                  : "text-stone-600 hover:bg-stone-100 hover:text-stone-900",
-              )}
-              onClick={() => setActiveCatId(cat.id)}
-            >
-              <FolderOpen className="size-3.5 flex-shrink-0" />
-              <span className="flex-1 truncate text-sm">{cat.name}</span>
-              <span className="text-xs text-stone-400">{items.filter(i => i.categoryId === cat.id).length}</span>
-              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100" onClick={e => e.stopPropagation()}>
-                <button onClick={() => setCatDialog({ mode: "edit", cat })}
-                  className="size-5 rounded flex items-center justify-center hover:bg-stone-200 text-stone-400 hover:text-stone-700">
-                  <Pencil className="size-2.5" />
-                </button>
-                <button onClick={() => setDeleteTarget({ type: "cat", id: cat.id, name: cat.name })}
-                  className="size-5 rounded flex items-center justify-center hover:bg-red-50 text-stone-400 hover:text-red-600">
-                  <Trash2 className="size-2.5" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </nav>
+          </nav>
+        ) : (
+          <Highlight
+            mode="parent"
+            controlledItems
+            value={activeCatId}
+            className="rounded-md bg-stone-200/70"
+            transition={{ type: "spring", stiffness: 350, damping: 35 }}
+            containerClassName="flex-1 overflow-y-auto px-2 py-2 space-y-0.5"
+          >
+            {categories.map(cat => (
+              <HighlightItem key={cat.id} value={cat.id}>
+                <div
+                  className={cn(
+                    "group flex items-center gap-2 rounded-md px-3 py-2 cursor-pointer transition-colors",
+                    activeCatId === cat.id
+                      ? "text-stone-900"
+                      : "text-stone-600 hover:text-stone-900",
+                  )}
+                  onClick={() => setActiveCatId(cat.id)}
+                >
+                  <FolderOpen className="size-3.5 flex-shrink-0" />
+                  <span className="flex-1 truncate text-sm">{cat.name}</span>
+                  <span className="text-xs text-stone-400">{items.filter(i => i.categoryId === cat.id).length}</span>
+                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => setCatDialog({ mode: "edit", cat })}
+                      className="size-5 rounded flex items-center justify-center hover:bg-stone-200 text-stone-400 hover:text-stone-700">
+                      <Pencil className="size-2.5" />
+                    </button>
+                    <button onClick={() => setDeleteTarget({ type: "cat", id: cat.id, name: cat.name })}
+                      className="size-5 rounded flex items-center justify-center hover:bg-red-50 text-stone-400 hover:text-red-600">
+                      <Trash2 className="size-2.5" animateOnHover />
+                    </button>
+                  </div>
+                </div>
+              </HighlightItem>
+            ))}
+          </Highlight>
+        )}
       </aside>
 
       {/* ── Main: items ──────────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
-        <div className="flex items-center justify-between px-8 py-5 border-b border-stone-100">
+        <div className="flex items-center justify-between px-4 md:px-8 py-4 md:py-5 border-b border-stone-100">
           <div>
             <h1 className="text-base font-semibold text-stone-900">
               {activeCat ? activeCat.name : "Danh mục sản phẩm"}
@@ -151,12 +170,12 @@ export function CatalogClient({
               onClick={() => setItemDialog({ mode: "add" })}
               className="flex items-center gap-1.5 rounded-lg bg-stone-900 px-3 py-2 text-xs font-medium text-white hover:bg-stone-700 transition-colors"
             >
-              <Plus className="size-3.5" /> Thêm sản phẩm
+              <Plus className="size-3.5" animateOnHover /> Thêm sản phẩm
             </button>
           )}
         </div>
 
-        <div className="px-8 py-6">
+        <div className="px-4 md:px-8 py-6">
           {!activeCat ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Package className="size-10 text-stone-200 mb-4" />
@@ -166,7 +185,7 @@ export function CatalogClient({
                 onClick={() => setCatDialog({ mode: "add" })}
                 className="flex items-center gap-1.5 rounded-lg bg-stone-900 px-3 py-2 text-xs font-medium text-white hover:bg-stone-700"
               >
-                <Plus className="size-3.5" /> Tạo danh mục
+                <Plus className="size-3.5" animateOnHover /> Tạo danh mục
               </button>
             </div>
           ) : visibleItems.length === 0 ? (
@@ -178,21 +197,22 @@ export function CatalogClient({
                 onClick={() => setItemDialog({ mode: "add" })}
                 className="flex items-center gap-1.5 rounded-lg bg-stone-900 px-3 py-2 text-xs font-medium text-white hover:bg-stone-700"
               >
-                <Plus className="size-3.5" /> Thêm sản phẩm
+                <Plus className="size-3.5" animateOnHover /> Thêm sản phẩm
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <StaggerGroup key={activeCatId} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {visibleItems.map(item => (
-                <ItemCard
-                  key={item.id}
-                  item={item}
-                  imageSrc={imageFor(item)}
-                  onEdit={() => setItemDialog({ mode: "edit", item })}
-                  onDelete={() => setDeleteTarget({ type: "item", id: item.id, name: item.name })}
-                />
+                <StaggerItem key={item.id}>
+                  <ItemCard
+                    item={item}
+                    imageSrc={imageFor(item)}
+                    onEdit={() => setItemDialog({ mode: "edit", item })}
+                    onDelete={() => setDeleteTarget({ type: "item", id: item.id, name: item.name })}
+                  />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerGroup>
           )}
         </div>
       </div>
@@ -259,7 +279,7 @@ function ItemCard({ item, imageSrc, onEdit, onDelete }: {
           </button>
           <button onClick={onDelete}
             className="size-6 rounded-md bg-white/90 flex items-center justify-center shadow text-stone-600 hover:text-red-600">
-            <Trash2 className="size-3" />
+            <Trash2 className="size-3" animateOnHover />
           </button>
         </div>
       </div>
@@ -390,11 +410,14 @@ function DeleteConfirm({ name, onClose, onConfirm }: { name: string; onClose: ()
     <Modal title="Xác nhận xóa" onClose={onClose}>
       <p className="text-sm text-stone-600">Xóa <strong className="text-stone-900">{name}</strong>? Hành động này không thể hoàn tác.</p>
       <div className="flex justify-end gap-2 mt-6">
-        <button onClick={onClose} className={cancelBtn}>Hủy</button>
-        <button disabled={deleting} onClick={async () => { setDeleting(true); try { await onConfirm(); } catch { toast.error("Xóa thất bại"); setDeleting(false); } }}
-          className="flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50">
+        <Button variant="outline" onClick={onClose}>Hủy</Button>
+        <Button
+          disabled={deleting}
+          onClick={async () => { setDeleting(true); try { await onConfirm(); } catch { toast.error("Xóa thất bại"); setDeleting(false); } }}
+          className="bg-red-600 text-white hover:bg-red-700"
+        >
           {deleting && <Loader2 className="size-3.5 animate-spin" />} Xóa
-        </button>
+        </Button>
       </div>
     </Modal>
   );
@@ -403,25 +426,21 @@ function DeleteConfirm({ name, onClose, onConfirm }: { name: string; onClose: ()
 // ── Shared ────────────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-semibold text-stone-900">{title}</h2>
-          <button onClick={onClose} className="size-7 rounded-md flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100">
-            <X className="size-4" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={v => { if (!v) onClose(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
         {children}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium uppercase tracking-wide text-stone-500">{label}</label>
+      <label className="text-xs font-medium text-stone-500">{label}</label>
       {children}
     </div>
   );
@@ -430,14 +449,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function DialogFooter({ saving, onClose, onSave }: { saving: boolean; onClose: () => void; onSave: () => void }) {
   return (
     <div className="flex justify-end gap-2 mt-6">
-      <button onClick={onClose} className={cancelBtn}>Hủy</button>
-      <button onClick={onSave} disabled={saving}
-        className="flex items-center gap-1.5 rounded-lg bg-stone-900 px-4 py-2 text-sm text-white hover:bg-stone-700 disabled:opacity-50">
+      <Button variant="outline" onClick={onClose}>Hủy</Button>
+      <Button onClick={onSave} disabled={saving}>
         {saving && <Loader2 className="size-3.5 animate-spin" />} Lưu
-      </button>
+      </Button>
     </div>
   );
 }
 
 const inputCls = "w-full rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-900 outline-none focus:border-stone-400";
-const cancelBtn = "rounded-lg border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50";

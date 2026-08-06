@@ -14,7 +14,7 @@ export async function getDefaultOrg() {
 
   const [created] = await db
     .insert(organizations)
-    .values({ clerkOrgId: "__default__", name: "VisioNT" })
+    .values({ clerkOrgId: "__default__", name: "GP Interior AI" })
     .returning();
   return created;
 }

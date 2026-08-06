@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Pencil, Trash2, Loader2, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Pencil, Trash2, Loader2, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 type Project = {
   id: string;
@@ -20,52 +28,51 @@ export function ProjectActions({ project }: { project: Project }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   return (
-    <>
-      <div
-        className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={e => e.preventDefault()}
-      >
-        <button
-          onClick={() => setEditOpen(true)}
-          className="size-7 rounded-md flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
-          title="Chỉnh sửa"
-        >
-          <Pencil className="size-3.5" />
-        </button>
-        <button
-          onClick={() => setDeleteOpen(true)}
-          className="size-7 rounded-md flex items-center justify-center text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-          title="Xóa dự án"
-        >
-          <Trash2 className="size-3.5" />
-        </button>
-      </div>
+    <div onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-stone-400 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 data-[state=open]:text-stone-700"
+            title="Tùy chọn"
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+            <Pencil className="size-3.5" /> Chỉnh sửa
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>
+            <Trash2 className="size-3.5" /> Xóa dự án
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      {editOpen && (
-        <EditDialog
-          project={project}
-          onClose={() => setEditOpen(false)}
-          onSaved={() => { setEditOpen(false); router.refresh(); }}
-        />
-      )}
-
-      {deleteOpen && (
-        <DeleteDialog
-          project={project}
-          onClose={() => setDeleteOpen(false)}
-          onDeleted={() => { setDeleteOpen(false); router.refresh(); }}
-        />
-      )}
-    </>
+      <EditDialog
+        project={project}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSaved={() => { setEditOpen(false); router.refresh(); }}
+      />
+      <DeleteDialog
+        project={project}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => { setDeleteOpen(false); router.refresh(); }}
+      />
+    </div>
   );
 }
 
 // ── Edit dialog ───────────────────────────────────────────────────────────────
 function EditDialog({
-  project, onClose, onSaved,
+  project, open, onOpenChange, onSaved,
 }: {
   project: Project;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
   onSaved: () => void;
 }) {
   const [form, setForm] = useState({
@@ -95,59 +102,53 @@ function EditDialog({
   };
 
   return (
-    <Modal onClose={onClose} title="Chỉnh sửa dự án">
-      <div className="space-y-4">
-        <Field label="Tên khách hàng *">
-          <input
-            autoFocus
-            className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-900 outline-none focus:border-stone-400"
-            value={form.clientName}
-            onChange={e => setForm(f => ({ ...f, clientName: e.target.value }))}
-          />
-        </Field>
-        <Field label="Email">
-          <input
-            type="email"
-            className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-900 outline-none focus:border-stone-400"
-            value={form.clientEmail}
-            onChange={e => setForm(f => ({ ...f, clientEmail: e.target.value }))}
-          />
-        </Field>
-        <Field label="Mô tả không gian">
-          <textarea
-            rows={3}
-            className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-900 outline-none focus:border-stone-400 resize-none"
-            value={form.roomDescription}
-            onChange={e => setForm(f => ({ ...f, roomDescription: e.target.value }))}
-          />
-        </Field>
-      </div>
-      <div className="flex justify-end gap-2 mt-6">
-        <button
-          onClick={onClose}
-          className="rounded-lg border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50"
-        >
-          Hủy
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex items-center gap-1.5 rounded-lg bg-stone-900 px-4 py-2 text-sm text-white hover:bg-stone-700 disabled:opacity-50"
-        >
-          {saving && <Loader2 className="size-3.5 animate-spin" />}
-          Lưu
-        </button>
-      </div>
-    </Modal>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Chỉnh sửa dự án</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Field label="Tên khách hàng *">
+            <Input
+              autoFocus
+              value={form.clientName}
+              onChange={e => setForm(f => ({ ...f, clientName: e.target.value }))}
+            />
+          </Field>
+          <Field label="Email">
+            <Input
+              type="email"
+              value={form.clientEmail}
+              onChange={e => setForm(f => ({ ...f, clientEmail: e.target.value }))}
+            />
+          </Field>
+          <Field label="Mô tả không gian">
+            <Textarea
+              rows={3}
+              value={form.roomDescription}
+              onChange={e => setForm(f => ({ ...f, roomDescription: e.target.value }))}
+            />
+          </Field>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="size-3.5 animate-spin" />}
+            Lưu
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 // ── Delete dialog ─────────────────────────────────────────────────────────────
 function DeleteDialog({
-  project, onClose, onDeleted,
+  project, open, onOpenChange, onDeleted,
 }: {
   project: Project;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
   onDeleted: () => void;
 }) {
   const [deleting, setDeleting] = useState(false);
@@ -167,55 +168,35 @@ function DeleteDialog({
   };
 
   return (
-    <Modal onClose={onClose} title="Xóa dự án">
-      <p className="text-sm text-stone-600">
-        Xóa dự án <strong className="text-stone-900">{project.clientName}</strong>?
-        Tất cả ảnh đã tạo sẽ bị xóa vĩnh viễn.
-      </p>
-      <div className="flex justify-end gap-2 mt-6">
-        <button
-          onClick={onClose}
-          className="rounded-lg border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50"
-        >
-          Hủy
-        </button>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50"
-        >
-          {deleting && <Loader2 className="size-3.5 animate-spin" />}
-          Xóa
-        </button>
-      </div>
-    </Modal>
-  );
-}
-
-// ── Shared modal shell ────────────────────────────────────────────────────────
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-semibold text-stone-900">{title}</h2>
-          <button onClick={onClose} className="size-7 rounded-md flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100">
-            <X className="size-4" />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Xóa dự án</DialogTitle>
+          <DialogDescription>
+            Xóa dự án <strong className="text-stone-900">{project.clientName}</strong>? Tất cả ảnh
+            đã tạo sẽ bị xóa vĩnh viễn.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
+          <Button
+            className="bg-red-600 text-white hover:bg-red-700"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting && <Loader2 className="size-3.5 animate-spin" />}
+            Xóa
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium uppercase tracking-wide text-stone-500">{label}</label>
+      <label className="text-xs font-medium text-stone-500">{label}</label>
       {children}
     </div>
   );

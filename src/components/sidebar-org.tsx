@@ -8,7 +8,7 @@ export function SidebarOrg() {
       <div className="size-6 rounded-md bg-stone-900 flex items-center justify-center flex-shrink-0">
         <Sofa className="size-3.5 text-white" />
       </div>
-      <span className="text-xs font-semibold text-stone-700 truncate">VisioNT</span>
+      <span className="text-xs font-semibold text-stone-700 truncate">GP Interior AI</span>
     </div>
   );
 }
